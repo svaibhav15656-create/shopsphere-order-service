@@ -13,7 +13,7 @@ import com.shopsphere.order_service.event.OrderEvent;
 import com.shopsphere.order_service.event.StockUpdateEvent;
 import com.shopsphere.order_service.repository.OrderRepository;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 
 
@@ -35,6 +35,9 @@ public class OrderService {
         kafkaTemplate.send("order-events",event);
         return saveOrder;
     }
+
+    //this will read the response from the product service reduce stock according to that
+    //it will change the state cancelled or success
     @Transactional
     public void updateOrderStatus(Long orderId , boolean success){
         Order order = orderRepository.findById(orderId)
@@ -45,6 +48,7 @@ public class OrderService {
         }else{
             order.setStatus(OrderStatus.CANCELLED);
         }
+        orderRepository.save(order);    
     }
     @KafkaListener(topics = "stock-update-events", groupId = "order-service-group")
     public void handleStockUpdate(StockUpdateEvent event){
