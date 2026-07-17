@@ -22,6 +22,7 @@ public class Order {
     private int quantity;
     private BigDecimal priceAtOrderTime;
     private LocalDateTime orderDate;
+    private String email;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
