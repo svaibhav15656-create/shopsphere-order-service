@@ -6,7 +6,6 @@ import com.shopsphere.order_service.entity.Order;
 import com.shopsphere.order_service.security.JwtUtil;
 import com.shopsphere.order_service.service.OrderService;
 
-import org.apache.catalina.connector.Response;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestMapping;
