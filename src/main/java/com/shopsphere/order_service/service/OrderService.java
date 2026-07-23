@@ -1,5 +1,6 @@
 package com.shopsphere.order_service.service;
 
+import com.shopsphere.order_service.OrderServiceApplication;
 import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,17 +15,24 @@ import com.shopsphere.order_service.event.StockUpdateEvent;
 import com.shopsphere.order_service.repository.OrderRepository;
 
 import org.springframework.transaction.annotation.Transactional;
+import com.shopsphere.order_service.event.OrderNotificationEvent;
 
 
 
 
 @Service
 public class OrderService {
+    
+
     @Autowired
     private OrderRepository orderRepository;
 
     @Autowired
     private KafkaTemplate<String, OrderEvent> kafkaTemplate;
+    @Autowired
+    private KafkaTemplate<String, OrderNotificationEvent> notificationKafkaTemplate; 
+
+    
 
     public Order createOrder(Order order){
         order.setStatus(OrderStatus.PENDING);
@@ -48,8 +56,16 @@ public class OrderService {
         }else{
             order.setStatus(OrderStatus.CANCELLED);
         }
-        orderRepository.save(order);    
-    }
+        orderRepository.save(order);
+        OrderNotificationEvent notification = new OrderNotificationEvent(
+            order.getId(),
+            order.getEmail(),
+            order.getProductName(),
+            order.getQuantity(),
+            order.getStatus().name()
+        );
+    notificationKafkaTemplate.send("order-notifications", notification);
+}
     @KafkaListener(topics = "stock-update-events", groupId = "order-service-group")
     public void handleStockUpdate(StockUpdateEvent event){
         updateOrderStatus(event.getOrderId(), event.isSuccess());
